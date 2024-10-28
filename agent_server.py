@@ -37,13 +37,14 @@ def AutoC2_shell(server_socket, client_socket):
             # Craft system command to send
             cmd = " ".join(command[1:]) + "\n"
 
-            print(f"Sending: {cmd}")
-
             # Send command
             client_socket.send(cmd.encode())
 
             # Receive output from the client
-            output = client_socket.recv(4096).decode()
+            buffer = b''
+            while b'ac2delim' not in buffer:
+                buffer += client_socket.recv(4096)
+            output = buffer.partition(b'ac2delim')[0].decode()
             print(output)
 
 def main():
