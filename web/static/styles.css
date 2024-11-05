@@ -46,8 +46,10 @@ body {
     border-radius: 5px;
     font-weight: 500;
     color: #ffffff;
+    transition: opacity 0.5s ease;
 }
 
+/* Message Categories */
 .success { background-color: #4CAF50; }
 .danger { background-color: #f44336; }
 .warning { background-color: #ff9800; }
@@ -114,19 +116,3 @@ body {
 .logout-button:hover {
     background-color: #00b4d8;
 }
-
-/* Flash Messages */
-.flash-message {
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    color: #ffffff;
-    transition: opacity 0.5s ease;
-}
-
-/* Message Categories */
-.success { background-color: #4CAF50; }
-.danger { background-color: #f44336; }
-.warning { background-color: #ff9800; }
-.info { background-color: #2196F3; }
