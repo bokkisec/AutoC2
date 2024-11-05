@@ -1,0 +1,132 @@
+/* General reset for consistent styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0077b6, #00b4d8);
+}
+
+/* Container styling */
+.container {
+    width: 400px;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.container:hover {
+    transform: translateY(-5px);
+}
+
+/* Title styling */
+.title {
+    font-size: 36px;
+    color: #0077b6;
+    font-weight: bold;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Flash message styling */
+.messages p {
+    margin: 0 0 15px 0;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.success { background-color: #4CAF50; }
+.danger { background-color: #f44336; }
+.warning { background-color: #ff9800; }
+.info { background-color: #2196F3; }
+
+/* Form styling */
+.login-form label {
+    display: block;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333;
+    text-align: left;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s;
+}
+
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+    border-color: #00b4d8;
+    outline: none;
+}
+
+.login-form input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #0077b6;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+
+.login-form input[type="submit"]:hover {
+    background-color: #00b4d8;
+}
+
+/* Logout button styling */
+.logout-button {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #ffffff;
+    background-color: #0077b6;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-top: 20px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.logout-button:hover {
+    background-color: #00b4d8;
+}
+
+/* Flash Messages */
+.flash-message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #ffffff;
+    transition: opacity 0.5s ease;
+}
+
+/* Message Categories */
+.success { background-color: #4CAF50; }
+.danger { background-color: #f44336; }
+.warning { background-color: #ff9800; }
+.info { background-color: #2196F3; }
