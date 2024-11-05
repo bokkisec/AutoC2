@@ -1,20 +1,51 @@
 import socket
+import threading
+import readline
 
 # Set server IP and port
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 4444
+
+# Function to handle client connections
+def handle_client(client_socket, client_address):
+    print(f"[+] New connection from {client_address}")
+    try:
+        while True:
+            # Receive data from the client
+            data = client_socket.recv(1024)
+            if not data:
+                break  # Exit if client closes the connection
+            print(f"Received from {client_address}: {data.decode()}")
+            
+            # Echo the data back to the client
+            client_socket.sendall(data)
+    except Exception as e:
+        print(f"[!] Error with client {client_address}: {e}")
+    finally:
+        print(f"[-] Connection closed for {client_address}")
+        client_socket.close()
 
 def start_server():
     # Set up server socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((SERVER_HOST, SERVER_PORT))
-    server_socket.listen(1)
+    server_socket.listen()
     print(f"Listening for incoming connections on {SERVER_HOST}:{SERVER_PORT}...")
 
-    # Accept a connection
-    client_socket, client_address = server_socket.accept()
-    print(f"Connection established from {client_address}")
+    try:
+        while True:
+            # Accept a new client
+            client_socket, client_address = server_socket.accept()
+            print(f"[+] Accepted connection from {client_address}")
+            
+            # Create a new thread to handle the client
+            client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
+            client_thread.start()
+    except KeyboardInterrupt:
+        print("\n[!] Shutting down the server.")
+    finally:
+        server_socket.close()
 
     return server_socket, client_socket
 
