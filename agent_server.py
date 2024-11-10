@@ -34,8 +34,7 @@ def handle_client(client_socket, client_address):
                 output = buffer.partition(b'ac2delim')[0].decode()
                 print(f"Output from {client_address}:\n{output}")
             else:
-                # No commands to send; give some time before rechecking
-                threading.Event().wait(1)
+                break
     except Exception as e:
         print(f"[!] Error with client {client_address}: {e}")
     finally:
