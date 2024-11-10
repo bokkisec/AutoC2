@@ -109,6 +109,7 @@ body {
 .navbar {
     display: flex;
     justify-content: space-between;
+    border-radius: 6px;
     align-items: center;
     background-color: #00b4d8;
     padding: 10px 20px;

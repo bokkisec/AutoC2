@@ -1,13 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+import os
+import users
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'
-
-# Hardcoded credentials
-USER_CREDENTIALS = {
-    "username": "admin",
-    "password": "password123"
-}
+app.secret_key = "secret"
 
 @app.route('/')
 def home():
@@ -21,7 +17,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if username == USER_CREDENTIALS['username'] and password == USER_CREDENTIALS['password']:
+        if users.validate_user(username, password):
             session['username'] = username
             return redirect(url_for('dashboard'))
         else:
@@ -54,5 +50,8 @@ def logout():
 
 
 if __name__ == '__main__':
+    # Default creds
+    if not os.path.exists("creds.db"):
+        users.register("admin", "admin")
     app.run(debug=True)
 
