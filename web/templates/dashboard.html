@@ -2,18 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - AutoC2</title>
+    <title>AutoC2 | Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+
+    <!-- Dashboard content -->
     <div class="container">
+
         <h1 class="title">AutoC2</h1>
 
-        <h2>Welcome, {{ username }}!</h2>
-        <p>This is your dashboard.</p>
+        <!-- Navbar with links -->
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="{{ url_for('dashboard') }}" class="button">Dashboard</a>
+                <a href="http://localhost:5000" class="button">Logs</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('logout') }}" class="button">Logout</a>
+            </div>
+        </nav>
         
-        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+        <div>
+            <h2>Welcome, {{ username }}!</h2>
+            <p>This is your dashboard.</p>
+        </div>
+        
     </div>
+
 </body>
 </html>
-

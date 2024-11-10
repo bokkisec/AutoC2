@@ -16,6 +16,16 @@ body {
 
 /* Container styling */
 .container {
+    width: 80%;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.login-container {
     width: 400px;
     padding: 30px;
     background: #ffffff;
@@ -25,16 +35,11 @@ body {
     transition: transform 0.3s ease;
 }
 
-.container:hover {
-    transform: translateY(-5px);
-}
-
-/* Title styling */
 .title {
     font-size: 36px;
     color: #0077b6;
     font-weight: bold;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -49,11 +54,11 @@ body {
     transition: opacity 0.5s ease;
 }
 
-/* Message Categories */
-.success { background-color: #4CAF50; }
-.danger { background-color: #f44336; }
-.warning { background-color: #ff9800; }
-.info { background-color: #2196F3; }
+/* Message Categories with blue-themed colors */
+.success { background-color: #0288d1; }
+.danger { background-color: #d32f2f; }
+.warning { background-color: #f57c00; }
+.info { background-color: #1976d2; }
 
 /* Form styling */
 .login-form label {
@@ -69,10 +74,10 @@ body {
     width: 100%;
     padding: 12px;
     margin: 8px 0;
-    border: 1px solid #ddd;
+    border: 1px solid #0077b6;
     border-radius: 6px;
     font-size: 16px;
-    background-color: #f9f9f9;
+    background-color: #f1f8fb;
     transition: border-color 0.3s;
 }
 
@@ -100,19 +105,41 @@ body {
     background-color: #00b4d8;
 }
 
-/* Logout button styling */
-.logout-button {
-    display: inline-block;
+/* Navbar styling with blue tones */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #00b4d8;
     padding: 10px 20px;
     color: #ffffff;
-    background-color: #0077b6;
-    text-decoration: none;
-    border-radius: 6px;
-    margin-top: 20px;
-    font-weight: bold;
-    transition: background-color 0.3s;
 }
 
-.logout-button:hover {
-    background-color: #00b4d8;
+.navbar .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navbar .nav-links a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.navbar .nav-links a:hover {
+    color: #00b4d8;
+}
+
+.navbar .button {
+    color: #ffffff;
+    background-color: #00eaff;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    display: inline-flex;
+    align-items: center;
 }
