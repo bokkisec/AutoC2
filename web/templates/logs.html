@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AutoC2 | Dashboard</title>
+    <title>AutoC2 | Logs</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -24,35 +24,20 @@
         </nav>
         
         <div class="main">
-            <h2 style="color: #ffffff;">Agents</h2>
+            <h2 style="color: #ffffff;">Logs</h2>
 
-            {% for agent in agents %}
-                <div class="dropdown" onclick="toggleDropdown(this)">
-                    <div class="dropdown-header"><h3>{{ agent.hostname }} ({{ agent.ip }}) - Agent ID: {{ agent.id }}</h3></div>
-                    <div class="dropdown-content" onclick="event.stopPropagation();">
-                        <form onsubmit="event.preventDefault(); sendCommand({{ agent.id }});">
-                            <label for="command-{{ agent.id }}">Command:</label>
-                            <input type="text" id="command-{{ agent.id }}"" style="width: 50%;" required>
-                            <button type="submit" class="button">Send</button>
-                        </form>
-
-                        <div id="output-{{ agent.id }}" class="output"></div>
-                        
-                        <h4>Output:</h4>
-                        <div>
-                            <!-- Buttons for output logs 1-10 -->
-                            {% for i in range(1, 11) %}
-                            <button class="button" onclick="updateOutput({{ agent.id }}, {{ i }})">{{ i }}</button>
-                            {% endfor %}
-                        </div>
-                        
-                        <!-- Dynamic output log display area -->
-                        <div id="output-log{{ agent.id }}" class="output">
-                            Output Log#: Select a button to see the output here.
-                        </div>
-                    </div>
+            <!-- Server logs -->
+            <div class="dropdown" onclick="toggleDropdown(this)">
+                <div class="dropdown-header"><h3>Server Logs</h3></div>
+                <div class="dropdown-content" onclick="event.stopPropagation();">
+                    <pre>
+                        {% for line in log_content %}
+                        {{ line }}
+                        {% endfor %}
+                    </pre>
                 </div>
-            {% endfor %}
+            </div>
+
         </div>
         
     </div>

