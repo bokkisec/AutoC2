@@ -23,12 +23,63 @@
             </div>
         </nav>
         
-        <div>
-            <h2>Welcome, {{ username }}!</h2>
-            <p>This is your dashboard.</p>
+        <div class="main">
+            <h2 style="color: #ffffff;">Agents</h2>
+
+            {% for agent in agents %}
+                <div class="dropdown" onclick="toggleDropdown(this)">
+                    <div class="dropdown-header">{{ agent.hostname }} ({{ agent.ip }}) - Agent ID: {{ agent.id }}</div>
+                    <div class="dropdown-content" onclick="event.stopPropagation();">
+                        <form onsubmit="event.preventDefault(); sendCommand({{ agent.id }});">
+                            <label for="command-{{ agent.id }}">Command:</label>
+                            <input type="text" id="command-{{ agent.id }}"" style="width: 50%;" required>
+                            <button type="submit" class="button">Send</button>
+                        </form>
+                        <div id="output-{{ agent.id }}" class="output"></div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
         
     </div>
+
+    <script>
+        function toggleDropdown(element) {
+            element.classList.toggle('open');
+        }
+
+        function sendCommand(agentId) {
+            const commandInput = document.getElementById(`command-${agentId}`);
+            const command = commandInput.value;
+            const outputDiv = document.getElementById(`output-${agentId}`);
+
+            if (command.trim() === "") {
+                alert("Please enter a command.");
+                return;
+            }
+
+            // Send command to the server using AJAX
+            fetch(`/send_command`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ agent_id: agentId, command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    outputDiv.innerHTML = `<strong>Output:</strong><br>${data.output}`;
+                } else {
+                    outputDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                }
+                commandInput.value = "";  // Clear the command input field
+            })
+            .catch(error => {
+                outputDiv.innerHTML = `<strong>Error:</strong> Could not send command.`;
+            });
+        }
+    </script>
 
 </body>
 </html>
