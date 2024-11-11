@@ -35,20 +35,19 @@
                             <input type="text" id="command-{{ agent.id }}"" style="width: 50%;" required>
                             <button type="submit" class="button">Send</button>
                         </form>
-
-                        <div id="output-{{ agent.id }}" class="output"></div>
                         
+                        <div id="output-{{ agent.id }}" class="output"></div>
+
                         <h4>Output:</h4>
                         <div>
                             <!-- Buttons for output logs 1-10 -->
-                            {% for i in range(1, 11) %}
-                            <button class="button" onclick="updateOutput({{ agent.id }}, {{ i }})">{{ i }}</button>
+                            {% for i in range(1, agent.curr_cmd_id) %}
+                            <button class="button" onclick="retrieveOutput({{ agent.id }}, {{ i }})">{{ i }}</button>
                             {% endfor %}
                         </div>
                         
                         <!-- Dynamic output log display area -->
-                        <div id="output-log{{ agent.id }}" class="output">
-                            Output Log#: Select a button to see the output here.
+                        <div id="agent-{{ agent.id }}" class="output">
                         </div>
                     </div>
                 </div>
@@ -83,14 +82,38 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    outputDiv.innerHTML = `<strong>Output:</strong><br>${data.output}`;
+                    outputDiv.innerHTML = `<strong>[INFO] Command sent:</strong> ${command}<br>`;
                 } else {
-                    outputDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                    outputDiv.innerHTML = `<strong>[ERROR]</strong> ${data.error}`;
                 }
                 commandInput.value = "";  // Clear the command input field
             })
             .catch(error => {
-                outputDiv.innerHTML = `<strong>Error:</strong> Could not send command.`;
+                outputDiv.innerHTML = `<strong>[ERROR]</strong> Could not send command.`;
+            });
+        }
+
+        function retrieveOutput(agentId, cmdId) {
+            const outputDiv = document.getElementById(`agent-${agentId}`);
+
+            // Send command to the server using AJAX
+            fetch(`/retrieve_output`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ agent_id: agentId, cmd_id: cmdId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    outputDiv.innerHTML = `<strong>Command ${cmdId}:</strong><pre>${data.output}</pre>`;
+                } else {
+                    outputDiv.innerHTML = `<strong>[ERROR]</strong> ${data.error}`;
+                }
+            })
+            .catch(error => {
+                outputDiv.innerHTML = `<strong>[ERROR]:</strong> Could not retrieve command.`;
             });
         }
     </script>
