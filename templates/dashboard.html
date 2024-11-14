@@ -31,10 +31,9 @@
             </div>            
 
             {% for agent in agents %}
-                <div class="dropdown" id="dropdown-{{ agent.id }}" onclick="toggleDropdown({{ agent.id }})">
+                <div class="dropdown" onclick="toggleDropdown(this)">
                     <div class="dropdown-header">
                         <h3>{{ agent.hostname }} ({{ agent.ip }}) - Agent ID: {{ agent.id }}</h3>
-                        <button onclick="removeAgent({{ agent.id }});" class="close-btn"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="dropdown-content" id="content-{{ agent.id }}" onclick="event.stopPropagation();">
                         <form onsubmit="event.preventDefault(); sendCommand({{ agent.id }});">
@@ -65,35 +64,9 @@
 
     <script>
         // Function to toggle dropdown visibility
-        function toggleDropdown(agentId) {
-            const dropdown = document.getElementById(`dropdown-${agentId}`);
-            const content = document.getElementById(`content-${agentId}`);
-
-            // Toggle dropdown open/close
-            const isOpen = dropdown.classList.toggle('open');
-            // Store the dropdown state in localStorage
-            localStorage.setItem(`dropdown-${agentId}`, isOpen ? 'open' : 'closed');
+        function toggleDropdown(element) {
+            element.classList.toggle('open');
         }
-
-        // Function to check and restore dropdown state on page load
-        function restoreDropdowns() {
-            {% for agent in agents %}
-                const state = localStorage.getItem(`dropdown-{{ agent.id }}`);
-                const dropdown = document.getElementById(`dropdown-{{ agent.id }}`);
-                const content = document.getElementById(`content-{{ agent.id }}`);
-                
-                // Restore the dropdown state based on localStorage
-                if (state === 'open') {
-                    dropdown.classList.add('open');
-                } else {
-                    dropdown.classList.remove('open');
-                }
-            {% endfor %}
-        }
-
-        // Call restoreDropdowns when the page loads
-        window.onload = restoreDropdowns;
-
         function sendCommand(agentId) {
             const commandInput = document.getElementById(`command-${agentId}`);
             const command = commandInput.value;
@@ -148,31 +121,6 @@
             .catch(error => {
                 outputDiv.innerHTML = `<strong>[ERROR]:</strong> Could not retrieve command.`;
             });
-        }
-
-        function removeAgent(agentId) {
-            // Confirmation prompt before removing the agent
-            if (confirm("Remove agent?")) {
-                // Send the request to remove the agent from the server
-                fetch(`/remove_agent`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ agent_id: agentId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();  // Reload to update the agent list
-                    } else {
-                        alert(`Error: ${data.error}`);
-                    }
-                })
-                .catch(error => {
-                    alert("Error: Could not remove agent.");
-                });
-            }
         }
     </script>
 
