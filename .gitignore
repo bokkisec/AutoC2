@@ -7,4 +7,4 @@ test/
 server.log
 cmd_output/
 static/win.ps1
-static/lin.sh
+static/lin

