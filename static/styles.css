@@ -176,10 +176,7 @@ body {
     display: inline-flex;
     align-items: center;
 }
-.dropdown-header {
-    font-weight: bold;
-    cursor: pointer;
-}
+
 .dropdown-content {
     display: none;
     margin-top: 10px;
@@ -193,4 +190,61 @@ body {
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #ddd;
+}
+
+/* Dropdown header to position the close button relative to each header */
+.dropdown-header {
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;  /* Make the close button position relative to this container */
+    padding-right: 30px; /* Give padding so text doesn't overlap with the close button */
+}
+
+/* Close button styling for each dropdown */
+.close-btn {
+    background-color: #d32f2f;  /* Red color matching the danger category */
+    color: #ffffff;             /* White "X" */
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 24px;
+    height: 24px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    position: absolute;
+    top: 0px;
+    right: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.close-btn:hover {
+    background-color: #f57c00;  /* Subtle orange to match the warning color */
+}
+
+.agents-header {
+    display: flex;            /* Use Flexbox for layout */
+    justify-content: center; /* Distribute space between items */
+    width: 100%;              /* Ensure it takes full width of its parent */
+}
+
+.agents-header h2 {
+    padding: 4px 8px;
+}
+
+.refresh-btn {
+    background-color: #28a745; /* Green color to differentiate */
+    color: #ffffff;
+    font-weight: bold;
+    padding: 8px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s;
+    font-size: 16px;
+}
+
+.refresh-btn i {
+    font-size: 20px; /* Size of the refresh icon */
 }

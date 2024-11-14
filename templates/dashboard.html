@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>AutoC2 | Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
@@ -24,15 +25,21 @@
         </nav>
         
         <div class="main">
-            <h2 style="color: #ffffff;">Agents</h2>
+            <div class="agents-header">
+                <h2 style="color: #ffffff;">Agents</h2>
+                <button onclick="location.reload();" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
+            </div>            
 
             {% for agent in agents %}
-                <div class="dropdown" onclick="toggleDropdown(this)">
-                    <div class="dropdown-header"><h3>{{ agent.hostname }} ({{ agent.ip }}) - Agent ID: {{ agent.id }}</h3></div>
-                    <div class="dropdown-content" onclick="event.stopPropagation();">
+                <div class="dropdown" id="dropdown-{{ agent.id }}" onclick="toggleDropdown({{ agent.id }})">
+                    <div class="dropdown-header">
+                        <h3>{{ agent.hostname }} ({{ agent.ip }}) - Agent ID: {{ agent.id }}</h3>
+                        <button onclick="removeAgent({{ agent.id }});" class="close-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="dropdown-content" id="content-{{ agent.id }}" onclick="event.stopPropagation();">
                         <form onsubmit="event.preventDefault(); sendCommand({{ agent.id }});">
                             <label for="command-{{ agent.id }}">Command:</label>
-                            <input type="text" id="command-{{ agent.id }}"" style="width: 50%;" required>
+                            <input type="text" id="command-{{ agent.id }}" style="width: 50%;" required>
                             <button type="submit" class="button">Send</button>
                         </form>
                         
@@ -57,9 +64,35 @@
     </div>
 
     <script>
-        function toggleDropdown(element) {
-            element.classList.toggle('open');
+        // Function to toggle dropdown visibility
+        function toggleDropdown(agentId) {
+            const dropdown = document.getElementById(`dropdown-${agentId}`);
+            const content = document.getElementById(`content-${agentId}`);
+
+            // Toggle dropdown open/close
+            const isOpen = dropdown.classList.toggle('open');
+            // Store the dropdown state in localStorage
+            localStorage.setItem(`dropdown-${agentId}`, isOpen ? 'open' : 'closed');
         }
+
+        // Function to check and restore dropdown state on page load
+        function restoreDropdowns() {
+            {% for agent in agents %}
+                const state = localStorage.getItem(`dropdown-{{ agent.id }}`);
+                const dropdown = document.getElementById(`dropdown-{{ agent.id }}`);
+                const content = document.getElementById(`content-{{ agent.id }}`);
+                
+                // Restore the dropdown state based on localStorage
+                if (state === 'open') {
+                    dropdown.classList.add('open');
+                } else {
+                    dropdown.classList.remove('open');
+                }
+            {% endfor %}
+        }
+
+        // Call restoreDropdowns when the page loads
+        window.onload = restoreDropdowns;
 
         function sendCommand(agentId) {
             const commandInput = document.getElementById(`command-${agentId}`);
@@ -116,12 +149,30 @@
                 outputDiv.innerHTML = `<strong>[ERROR]:</strong> Could not retrieve command.`;
             });
         }
-    </script>
 
-    <script>
-        function updateOutput(agent_id, logNumber) {
-            const outputLog = document.getElementById('output-log' + agent_id);
-            outputLog.innerText = `Output Log ${logNumber}: This is the content for output log ${logNumber}`;
+        function removeAgent(agentId) {
+            // Confirmation prompt before removing the agent
+            if (confirm("Remove agent?")) {
+                // Send the request to remove the agent from the server
+                fetch(`/remove_agent`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ agent_id: agentId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();  // Reload to update the agent list
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert("Error: Could not remove agent.");
+                });
+            }
         }
     </script>
 

