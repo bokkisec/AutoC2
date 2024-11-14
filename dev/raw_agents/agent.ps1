@@ -49,7 +49,6 @@ while ($true) {
                 $writer.WriteLine($formattedOutput)
                 $writer.WriteLine("ac2delim")
             }
-            Start-Sleep -Milliseconds 500 # Short pause between command checks
         }
 
         # Close connection after processing commands

