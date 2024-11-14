@@ -20,11 +20,14 @@ FLASK_PORT = 5000
 DELAY = 10
 JITTER = 2
 
+# Known password
+KNOWN_PW = "HeilEmper0r!"
+
 # Flask stuff
 app = Flask(__name__)
 app.secret_key = "ac2_secret"
-log = logging.getLogger('werkzeug')
-log.disabled = True
+#log = logging.getLogger('werkzeug')
+#log.disabled = True
 
 # Set up server logging
 logger = logging.getLogger(__name__)
