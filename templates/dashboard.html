@@ -33,7 +33,7 @@
             {% for agent in agents %}
                 <div class="dropdown" onclick="toggleDropdown(this)">
                     <div class="dropdown-header">
-                        <h3>{{ agent.hostname }} ({{ agent.ip }}) - Agent ID: {{ agent.id }}</h3>
+                        <h3>{{ agent.id }}. &lt{{ agent.hostname }}&gt ({{ agent.ip }}) - {{ agent.whoami }}</h3>
                     </div>
                     <div class="dropdown-content" id="content-{{ agent.id }}" onclick="event.stopPropagation();">
                         <form onsubmit="event.preventDefault(); sendCommand({{ agent.id }});">

