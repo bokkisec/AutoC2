@@ -69,4 +69,4 @@ def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
         print(f"Error occurred: {e}")
 
 if __name__=="__main__":
-    pass
+    ssh("root", "password", "192.168.108.19", "192.168.108.15", "5000")
