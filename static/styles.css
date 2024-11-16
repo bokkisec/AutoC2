@@ -248,3 +248,25 @@ body {
 .refresh-btn i {
     font-size: 20px; /* Size of the refresh icon */
 }
+
+.start-attack-button {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 20px 40px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.start-attack-button:hover {
+    background-color: #ff1a1a;
+    transform: scale(1.05);
+}
+
+.start-attack-button:active {
+    transform: scale(0.95);
+}

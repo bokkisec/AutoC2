@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AutoC2 | Attack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <!-- Dashboard content -->
+    <div class="container">
+
+        <h1 class="title">AutoC2</h1>
+
+        <!-- Navbar with links -->
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="{{ url_for('dashboard') }}" class="button">Dashboard</a>
+                <a href="{{ url_for('attack') }}" class="button">Attack</a>
+                <a href="{{ url_for('logs') }}" class="button">Logs</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('logout') }}" class="button">Logout</a>
+            </div>
+        </nav>
+        
+        <div class="main">
+            <button id="start-attack-button" class="start-attack-button">Start Attack</button>
+            <div id="response-message" class="output" style="color: white;"></div>
+        </div>
+        
+    </div>
+
+    <script>
+        document.getElementById('start-attack-button').addEventListener('click', async () => {
+            const responseMessage = document.getElementById('response-message');
+    
+            try {
+                // Send POST request to Flask server
+                const response = await fetch('/start_attack', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+    
+                if (response.ok) {
+                    const data = await response.text(); // Assuming the server returns plain text
+                    responseMessage.textContent = data;
+                } else {
+                    responseMessage.textContent = 'Error: Failed to initiate attack.';
+                    responseMessage.style.color = 'red';
+                }
+            } catch (error) {
+                responseMessage.textContent = 'Error: Could not reach the server.';
+                responseMessage.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>
