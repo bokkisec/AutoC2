@@ -9,7 +9,7 @@ def register(user, pw):
     result = f"{user}:{hashed_pw}\n"
     
     # Append to the creds.db file
-    with open("creds.db", "a") as file:
+    with open("data/creds.db", "a") as file:
         file.write(result)
 
 def validate_user(user, pw):
@@ -20,7 +20,7 @@ def validate_user(user, pw):
     login_attempt = f"{user}:{hashed_pw}\n"
 
     # Compare with entries in creds.db
-    with open("creds.db", "r") as file:
+    with open("data/creds.db", "r") as file:
         for line in file:
             if line == login_attempt:
                 return True

@@ -6,7 +6,7 @@ import os
 import random
 
 # Custom imports
-import implants
+import modules.implants
 
 """
 With valid credentials and correct permissions, execute commands on remote MSSQL server

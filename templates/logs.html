@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>AutoC2 | Logs</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
@@ -25,7 +26,10 @@
         </nav>
         
         <div class="main">
-            <h2 style="color: #ffffff;">Logs</h2>
+            <div class="agents-header">
+                <h2 style="color: #ffffff;">Logs</h2>
+                <button onclick="location.reload();" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
+            </div>
 
             <!-- Server logs -->
             <div class="dropdown" onclick="toggleDropdown(this)">
@@ -33,6 +37,18 @@
                 <div class="dropdown-content" onclick="event.stopPropagation();">
                     <pre>
                         {% for line in log_content %}
+                        {{ line }}
+                        {% endfor %}
+                    </pre>
+                </div>
+            </div>
+
+            <!-- Attack logs -->
+            <div class="dropdown" onclick="toggleDropdown(this)">
+                <div class="dropdown-header"><h3>Attack Logs</h3></div>
+                <div class="dropdown-content" onclick="event.stopPropagation();">
+                    <pre>
+                        {% for line in attack_log_content %}
                         {{ line }}
                         {% endfor %}
                     </pre>

@@ -37,6 +37,8 @@
     
             try {
                 // Send POST request to Flask server
+                responseMessage.textContent = 'Attack initiated';
+
                 const response = await fetch('/start_attack', {
                     method: 'POST',
                     headers: {
@@ -45,15 +47,12 @@
                 });
     
                 if (response.ok) {
-                    const data = await response.text(); // Assuming the server returns plain text
-                    responseMessage.textContent = data;
+                    responseMessage.textContent = 'Attack completed';
                 } else {
-                    responseMessage.textContent = 'Error: Failed to initiate attack.';
-                    responseMessage.style.color = 'red';
+
                 }
             } catch (error) {
-                responseMessage.textContent = 'Error: Could not reach the server.';
-                responseMessage.style.color = 'red';
+
             }
         });
     </script>

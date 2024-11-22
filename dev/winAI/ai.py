@@ -93,9 +93,17 @@ def evaluate(model, X_test, y_test):
     model.eval()
     with torch.no_grad():
         outputs = model(X_test)
+        print(outputs)
         _, predictions = torch.max(outputs, 1)  # Get the class with the highest probability
         accuracy = (predictions == y_test).float().mean()
         print(f'Accuracy: {accuracy.item() * 100}%')
+
+# Test function
+def test(model, X):
+    model.eval()
+    with torch.no_grad():
+        outputs = model(X)
+        print(outputs)
 
 # Main execution
 if __name__ == "__main__":
