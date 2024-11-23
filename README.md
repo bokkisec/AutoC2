@@ -2,6 +2,10 @@
  	
 ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
 
+## Web UI
+
+![Dashboard](examples/dashboard.png)
+
 ## Installation & Usage
 Download the repo then run the following commands to install dependencies into a virtual environment (recommended)
 ```
