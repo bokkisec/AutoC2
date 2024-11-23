@@ -51,6 +51,8 @@ def setup_logger(logger_name, log_file, level=logging.INFO):
 
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
 
+if not os.path.exists("data"):
+    os.mkdir("data")
 if os.path.exists("data/server.log"):
     os.remove("data/server.log")
 setup_logger("server", "data/server.log")
@@ -183,7 +185,7 @@ def start_server():
     finally:
         server_socket.close()
 
-def network_scan(subnet="192.168.108.", ports=[22, 445]):
+def network_scan(subnet="192.168.108.", ports=[22, 445, 5985]):
     """
     Scans the given subnet for specified ports and handles results accordingly.
 

