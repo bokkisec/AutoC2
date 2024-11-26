@@ -2,6 +2,8 @@
  	
 ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
 
+Basic C2 (Command & Control) server with a web frontend. "Attack" feature automatically scans the network for servers using known default credentials and installs implants to connect back to the server. 
+
 ## Example
 
 ![Dashboard](examples/dashboard.png)
